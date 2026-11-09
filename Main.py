@@ -1,5 +1,10 @@
 import tkinter as tk
 
+def LoadSchedule():
+    
+def SaveSchedule():
+    
+def Calculate(): 
 
 if __name__ == '__main__':
     root = tk.Tk()
