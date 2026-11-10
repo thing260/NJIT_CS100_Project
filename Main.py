@@ -1,11 +1,12 @@
 import tkinter as tk
 
 def LoadSchedule():
-    
+    pass
 def SaveSchedule():
-    
+    pass
 def Calculate(): 
-
+    pass
+    
 if __name__ == '__main__':
     root = tk.Tk()
     root.title("Our app")
