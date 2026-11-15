@@ -1,42 +1,11 @@
 import tkinter as tk
-
-# task classes
-class task: # this will be gotten from dynamic and static tasks converted to this type
-    def __init__(self,startTime : int,endTime: int,color : str):
-        self.startTime = startTime # something like 10 as in 10AM
-        self.endTime = endTime
-        self.color = color
-
-class DynamicTask:
-    def __init__(self,duration : int,priority : int,amount : int,color : str):
-        self.duration = duration
-        self.priority = priority
-        self.amount = amount
-        self.color = color
-
-class StaticTask:
-    def __init__(self,startTime : str,endTime: str,color : str,daysOfWeek : str):
-        self.startTime = startTime # something like "10AM"
-        self.endTime = endTime
-        self.color = color # something like "#1E90FF"
-        self.dayOfWeek = daysOfWeek # something like "0011010", aka the task is on wed, thur, and saturday
-
-Tasks = []
-DynamicTasks = []
-StaticTasks = []
-sleepTime = [0,0]
-
-# load schedule here:
-
-
-
     # colors
 blue = "#1E90FF"
 red =  "#ed5949"
 yellow = "#ede449"
 
 
-# UI BEING DECLARED
+# UI BEING DECLARED, MOST OF IT WILL BE CHANGED BY FUNCTIONS/COMMANDS
 # configs and shit
 root = tk.Tk()
 root.title("diddy balls")
@@ -49,9 +18,9 @@ scheduleMaker_Frame = tk.Frame()
 
 goToSchedule_Button = tk.Button(scheduleMaker_Frame, text="Go to Schedule", bg=red,command=lambda: goToScheduleViewer())
 goToSchedule_Button.place(x=50, y=50, height=150, width=300)
-calculate_Button = tk.Button(scheduleMaker_Frame, text="Calculate",   bg=red)
+calculate_Button = tk.Button(scheduleMaker_Frame, text="Calculate",   bg=red,command=lambda : calculate(tasks,dynamicTasks,staticTasks,sleepTime))
 calculate_Button.place(x=350, y=50, height=150, width=300)
-exit_button2 = tk.Button(scheduleMaker_Frame, text="Exit/Save", bg=red,command= lambda : QuitAndSave())
+exit_button2 = tk.Button(scheduleMaker_Frame, text="Exit/Save", bg=red,command= lambda : quitAndSave(dynamicTasks,staticTasks,sleepTime))
 exit_button2.place(x=650, y=50,height=150, width=300)
 
 holderLabel_Label = tk.Label(scheduleMaker_Frame,borderwidth=2, relief="groove")
@@ -97,7 +66,7 @@ goToScheduleMaker_Button = tk.Button(scheduleViewer_Frame,text="Go to Schedule M
 goToScheduleMaker_Button.place(x=50,  y=50, height=150,width=300)
 schedule_Label = tk.Label(scheduleViewer_Frame,borderwidth=2, relief="groove",           text="Your Schedule")
 schedule_Label.place(x=350, y=50, height=150,width=300)
-exit_Button = tk.Button(scheduleViewer_Frame,             text="Exit/Save",           bg="#1E90FF",command= lambda : QuitAndSave())
+exit_Button = tk.Button(scheduleViewer_Frame,             text="Exit/Save",           bg="#1E90FF",command= lambda : quitAndSave(dynamicTasks,staticTasks,sleepTime))
 exit_Button.place(x=650, y=50, height=150,width=300)
 
 WidthOfBox = 900
@@ -114,35 +83,81 @@ scheduleViewerTasks_scrollbar = tk.Scrollbar(scheduleViewer_Frame, orient="verti
 scheduleViewerTasks_scrollbar.place(x=50, y=200, height=900)
 scheduleViewerTasks_canvas.configure(yscrollcommand=scheduleViewerTasks_scrollbar.set)
 
-
-
-
-
-
 scheduleViewer_Frame.place(x=0,y=0,height=1150,width=1000)
 
 
+
+# DONE DECLARING UI
+
+# task classes
+class task: # this will be gotten from dynamic and static tasks converted to this type
+    def __init__(self,startTime : int,endTime: int,color : str):
+        self.startTime = startTime # something like 10 as in 10AM
+        self.endTime = endTime
+        self.color = color
+
+class DynamicTask:
+    def __init__(self,duration : int,priority : int,amount : int,color : str):
+        self.duration = duration
+        self.priority = priority #higher the priority is as an integer, lower it is in actual priority
+        self.amount = amount
+        self.color = color
+
+class StaticTask:
+    def __init__(self,startTime : str,endTime: str,color : str,daysOfWeek : str):
+        self.startTime = startTime # something like "10AM"
+        self.endTime = endTime
+        self.color = color # something like "#1E90FF"
+        self.dayOfWeek = daysOfWeek # something like "0011010", aka the task is on wed, thur, and saturday
+
+# variables
+
+tasks = []
+dynamicTasks = []
+staticTasks = []
+sleepTime = [0,0]
 
 # button Commands
 def goToScheduleMaker():
     scheduleMaker_Frame.tkraise()
 def goToScheduleViewer():
     scheduleViewer_Frame.tkraise()
-def QuitAndSave():
-    SaveSchedule()
+def quitAndSave(dynamicTasks,staticTasks,sleepTime):
+    saveSchedule(dynamicTasks,staticTasks,sleepTime)
     root.quit()
-def SaveSchedule():
+def saveSchedule(dynamicTasks,staticTasks,sleepTime):
     pass
-def Calculate():
+def calculate(tasks,dynamicTasks,StaticTasks,sleepTime):
     pass
-def AddNewDynamicTaskToList():
+def addNewDynamicTaskToList(dynamicTasks):
+    dynamicTasks.append(DynamicTask(30,100,0,red))
+
+def addNewStaticTaskToList(staticTasks):
+    staticTasks.append(StaticTask("NA", "NA", blue,"0000000"))
+
+
+
+    # other functions
+def loadTasks(dynamicTasks,staticTasks,sleepTime):
     pass
-def AddNewStaticTaskToList():
+def refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks):
     pass
-def RefreshStaticAndDynamicTaskRendering():
-    pass
-# other
+    #reference to our ScheduleMakerCanvas -> Frame
+    # delete everything in Frame
+    #
+
+# BEGGINING OF ACTUALLY RUNNING THE PROGRAM
+
+loadTasks(dynamicTasks,staticTasks,sleepTime)
+calculate(tasks,dynamicTasks,staticTasks,sleepTime)
+refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks)
+
+
+
+
 root.mainloop()
+
+
 
 
 
