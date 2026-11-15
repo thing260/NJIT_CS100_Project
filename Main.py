@@ -145,6 +145,8 @@ def refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks):
     #reference to our ScheduleMakerCanvas -> Frame
     # delete everything in Frame
     #
+def refreshTaskRendering(Tasks):
+    pass
 
 # BEGGINING OF ACTUALLY RUNNING THE PROGRAM
 
