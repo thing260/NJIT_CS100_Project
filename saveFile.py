@@ -1,6 +1,6 @@
 def saveFile(dynamicTasks, staticTasks, sleepVar):
 
-    file = open("schedile_data.txt", "w")
+    file = open("schedule_data.txt", "w")
 
     sleep_line = str(sleepVar[0]) + "," + str(sleepVar[1]) + "\n"
     file.write(sleep_line)
