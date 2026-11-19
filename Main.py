@@ -25,9 +25,9 @@ exit_button2.place(x=650, y=50,height=150, width=300)
 
 holderLabel_Label = tk.Label(scheduleMaker_Frame,borderwidth=2, relief="groove")
 holderLabel_Label.place(x=50, y=225, height=200, width=900)
-addDynamicTask_Button = (tk.Button(scheduleMaker_Frame, text="Add dynamic task", bg=red))
+addDynamicTask_Button = (tk.Button(scheduleMaker_Frame, text="Add \ndynamic task", bg=red))
 addDynamicTask_Button.place(x=75, y=250, height=150,width=150)
-addStaticTask_Button = tk.Button(scheduleMaker_Frame, text="Add static task", bg=red)
+addStaticTask_Button = tk.Button(scheduleMaker_Frame, text="Add \nstatic task", bg=red)
 addStaticTask_Button.place(x=225,y=250,height=150,width=150)
 sleepLabelTask_Label = tk.Label(scheduleMaker_Frame,relief="groove",text="Enter Sleep")
 sleepLabelTask_Label.place(x=400,y=250,height=50,width=500)
@@ -62,11 +62,11 @@ scheduleMaker_Frame.place(x=0, y=0, height=1150, width=1000)
 # first page
 scheduleViewer_Frame = tk.Frame()
 
-goToScheduleMaker_Button = tk.Button(scheduleViewer_Frame,text="Go to Schedule Maker",bg="#1E90FF",command= lambda : goToScheduleMaker())
+goToScheduleMaker_Button = tk.Button(scheduleViewer_Frame,text="Go to Schedule Maker",bg=red,command= lambda : goToScheduleMaker())
 goToScheduleMaker_Button.place(x=50,  y=50, height=150,width=300)
 schedule_Label = tk.Label(scheduleViewer_Frame,borderwidth=2, relief="groove",           text="Your Schedule")
 schedule_Label.place(x=350, y=50, height=150,width=300)
-exit_Button = tk.Button(scheduleViewer_Frame,             text="Exit/Save",           bg="#1E90FF",command= lambda : quitAndSave(dynamicTasks,staticTasks,sleepTime))
+exit_Button = tk.Button(scheduleViewer_Frame,             text="Exit/Save",           bg=red,command= lambda : quitAndSave(dynamicTasks,staticTasks,sleepTime))
 exit_Button.place(x=650, y=50, height=150,width=300)
 
 WidthOfBox = 900
@@ -90,7 +90,7 @@ scheduleViewer_Frame.place(x=0,y=0,height=1150,width=1000)
 # DONE DECLARING UI
 
 # task classes
-class task: # this will be gotten from dynamic and static tasks converted to this type
+class Task: # this will be gotten from dynamic and static tasks converted to this type
     def __init__(self,startTime : int,endTime: int,color : str):
         self.startTime = startTime # something like 10 as in 10AM
         self.endTime = endTime
@@ -120,13 +120,139 @@ sleepTime = [0,0]
 # button Commands
 def goToScheduleMaker():
     scheduleMaker_Frame.tkraise()
+    
 def goToScheduleViewer():
     scheduleViewer_Frame.tkraise()
+    
 def quitAndSave(dynamicTasks,staticTasks,sleepTime):
-    saveSchedule(dynamicTasks,staticTasks,sleepTime)
+    saveFile(dynamicTasks,staticTasks,sleepTime)
     root.quit()
-def saveSchedule(dynamicTasks,staticTasks,sleepTime):
-    pass
+    
+def saveFile(dynamicTasks, staticTasks, sleepVar):
+    file = open("schedule_data.txt", "w")
+
+    if (sleepVar == None):
+        return #nothing valid to save
+
+    sleep_line = str(sleepVar[0]) + "," + str(sleepVar[1]) + "\n"
+    file.write(sleep_line)
+
+    dynamic_size = len(dynamicTasks)
+    file.write(str(dynamic_size) + "\n")
+
+    for i in range(dynamic_size):
+        task = dynamicTasks[i]
+
+        task_line = str(task[0]) + "," + str(task[1]) + "," + str(task[2]) + "," + str(task[3]) + "\n"
+        file.write(task_line)
+
+    static_size = len(staticTasks)
+    file.write(str(static_size) + "\n")
+
+    index = 0
+    while index < static_size:
+        task = staticTasks[index]
+
+        task_line = str(task[0]) + "," + str(task[1]) + "," + str(task[2]) + "," + str(task[3]) + "," + str(task[4]) + "\n"
+        file.write(task_line)
+        index += 1
+
+    file.close()
+    return
+
+def loadFile():
+    file_path = "schedule_data.txt"
+
+    lines = None
+    try:
+        file = open(file_path, "r")
+        lines = file.readlines()
+        file.close()
+    except:
+        lines = []
+
+    is_valid = True
+
+    sleepVar = []
+    dynamicTasks = []
+    staticTasks = []
+
+
+    if len(lines) == 0:
+        is_valid = False
+
+    if is_valid:
+        sleep_data = lines[0].strip().split(',')
+        if len(sleep_data) != 2:
+            is_valid = False
+        else:
+            sleepVar = [sleep_data[0], sleep_data[1]]
+
+
+    current_line = 1
+    dynamic_size = 0
+
+    if is_valid:
+        if current_line >= len(lines):
+            is_valid = False
+        else:
+            size_str = lines[current_line].strip()
+            if not size_str.isdigit():
+                is_valid = False
+            else:
+                dynamic_size = int(size_str)
+                current_line += 1
+
+    if is_valid:
+        for i in range(dynamic_size):
+            if current_line >= len(lines):
+                is_valid = False
+                break
+
+            task_data = lines[current_line].strip().split(',')
+            if len(task_data) != 4:
+                is_valid = False
+                break
+
+            dynamicTasks.append([task_data[0], task_data[1], task_data[2], task_data[3]])
+            current_line += 1
+
+
+    static_size = 0
+
+    if is_valid:
+        if current_line >= len(lines):
+            is_valid = False
+        else:
+            size_str = lines[current_line].strip()
+            if not size_str.isdigit():
+                is_valid = False
+            else:
+                static_size = int(size_str)
+                current_line += 1
+    if is_valid:
+        for i in range(static_size):
+            if current_line >= len(lines):
+                is_valid = False
+                break
+
+            task_data = lines[current_line].strip().split(',')
+            if len(task_data) != 5:
+                is_valid = False
+                break
+
+            staticTasks.append([task_data[0], task_data[1], task_data[2], task_data[3], task_data[4]])
+            current_line += 1
+
+
+    if not is_valid:
+        clear_file = open(file_path, "w")
+        clear_file.close()
+
+        return (None,None,None)
+    else:
+        return (dynamicTasks, staticTasks, sleepVar)
+
 def calculate(tasks,dynamicTasks,StaticTasks,sleepTime):
     pass
 def addNewDynamicTaskToList(dynamicTasks):
@@ -134,12 +260,7 @@ def addNewDynamicTaskToList(dynamicTasks):
 
 def addNewStaticTaskToList(staticTasks):
     staticTasks.append(StaticTask("NA", "NA", blue,"0000000"))
-
-
-
     # other functions
-def loadTasks(dynamicTasks,staticTasks,sleepTime):
-    pass
 def refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks):
     pass
     #reference to our ScheduleMakerCanvas -> Frame
@@ -150,7 +271,7 @@ def refreshTaskRendering(Tasks):
 
 # BEGGINING OF ACTUALLY RUNNING THE PROGRAM
 
-loadTasks(dynamicTasks,staticTasks,sleepTime)
+loadFile(dynamicTasks,staticTasks,sleepTime)
 calculate(tasks,dynamicTasks,staticTasks,sleepTime)
 refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks)
 
@@ -158,6 +279,7 @@ refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks)
 
 
 root.mainloop()
+
 
 
 
