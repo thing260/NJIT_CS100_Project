@@ -225,10 +225,10 @@ def loadFile():
 def calculate(tasks,dynamicTasks,StaticTasks,sleepTime):
     pass
 def addNewDynamicTaskToList(dynamicTasks):
-    dynamicTasks.append([30,100,0,red]) # not correct
+    dynamicTasks.append([30,100,0,red,"A Dynamic Task"]) # not correct
 
 def addNewStaticTaskToList(staticTasks):
-    staticTasks.append(["NA", "NA", blue,"0000000"]) # Not correct
+    staticTasks.append(["10AM", "10AM", "0000000",blue,"A Static Task"]) # Not correct
     # other functions
 def refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks):
     pass
@@ -249,7 +249,6 @@ refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks)
 
 
 root.mainloop()
-
 
 
 
