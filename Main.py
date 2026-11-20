@@ -89,50 +89,19 @@ scheduleViewer_Frame.place(x=0,y=0,height=1150,width=1000)
 
 # DONE DECLARING UI
 
-# task classes
-class Task: # this will be gotten from dynamic and static tasks converted to this type
-    def __init__(self,startTime : int,endTime: int,color : str):
-        self.startTime = startTime # something like 10 as in 10AM
-        self.endTime = endTime
-        self.color = color
-
-class DynamicTask:
-    def __init__(self,duration : int,priority : int,amount : int,color : str):
-        self.duration = duration
-        self.priority = priority #higher the priority is as an integer, lower it is in actual priority
-        self.amount = amount
-        self.color = color
-
-class StaticTask:
-    def __init__(self,startTime : str,endTime: str,color : str,daysOfWeek : str):
-        self.startTime = startTime # something like "10AM"
-        self.endTime = endTime
-        self.color = color # something like "#1E90FF"
-        self.dayOfWeek = daysOfWeek # something like "0011010", aka the task is on wed, thur, and saturday
-
-# variables
-
-tasks = []
-dynamicTasks = []
-staticTasks = []
-sleepTime = [0,0]
-
 # button Commands
 def goToScheduleMaker():
     scheduleMaker_Frame.tkraise()
-    
+
 def goToScheduleViewer():
     scheduleViewer_Frame.tkraise()
-    
+
 def quitAndSave(dynamicTasks,staticTasks,sleepTime):
     saveFile(dynamicTasks,staticTasks,sleepTime)
     root.quit()
-    
+
 def saveFile(dynamicTasks, staticTasks, sleepVar):
     file = open("schedule_data.txt", "w")
-
-    if (sleepVar == None):
-        return #nothing valid to save
 
     sleep_line = str(sleepVar[0]) + "," + str(sleepVar[1]) + "\n"
     file.write(sleep_line)
@@ -143,7 +112,7 @@ def saveFile(dynamicTasks, staticTasks, sleepVar):
     for i in range(dynamic_size):
         task = dynamicTasks[i]
 
-        task_line = str(task[0]) + "," + str(task[1]) + "," + str(task[2]) + "," + str(task[3]) + "\n"
+        task_line = str(task[0]) + "," + str(task[1]) + "," + str(task[2]) + "," + str(task[3]) + "," + str(task[4]) + "\n"
         file.write(task_line)
 
     static_size = len(staticTasks)
@@ -210,11 +179,11 @@ def loadFile():
                 break
 
             task_data = lines[current_line].strip().split(',')
-            if len(task_data) != 4:
+            if len(task_data) != 5:
                 is_valid = False
                 break
 
-            dynamicTasks.append([task_data[0], task_data[1], task_data[2], task_data[3]])
+            dynamicTasks.append([task_data[0], task_data[1], task_data[2], task_data[3],task_data[4]])
             current_line += 1
 
 
@@ -249,17 +218,17 @@ def loadFile():
         clear_file = open(file_path, "w")
         clear_file.close()
 
-        return (None,None,None)
+        return ([],[],["",""])
     else:
         return (dynamicTasks, staticTasks, sleepVar)
 
 def calculate(tasks,dynamicTasks,StaticTasks,sleepTime):
     pass
 def addNewDynamicTaskToList(dynamicTasks):
-    dynamicTasks.append(DynamicTask(30,100,0,red))
+    dynamicTasks.append([30,100,0,red]) # not correct
 
 def addNewStaticTaskToList(staticTasks):
-    staticTasks.append(StaticTask("NA", "NA", blue,"0000000"))
+    staticTasks.append(["NA", "NA", blue,"0000000"]) # Not correct
     # other functions
 def refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks):
     pass
@@ -271,7 +240,8 @@ def refreshTaskRendering(Tasks):
 
 # BEGGINING OF ACTUALLY RUNNING THE PROGRAM
 
-loadFile(dynamicTasks,staticTasks,sleepTime)
+dynamicTasks,staticTasks,sleepTime = loadFile()
+tasks = []
 calculate(tasks,dynamicTasks,staticTasks,sleepTime)
 refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks)
 
@@ -279,6 +249,8 @@ refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks)
 
 
 root.mainloop()
+
+
 
 
 
