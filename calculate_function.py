@@ -42,13 +42,13 @@ def sleep_to_static_tasks(sleep_time):
     # Split overnight sleep across midnight into two day blocks
     if bed_mins > wake_mins:
         return [
-            StaticTask(sleep_time[1], "11:59PM", sleep_color, "1111111"),
-            StaticTask("12:00AM", sleep_time[0], sleep_color, "1111111"),
+            StaticTask(sleep_time[1], "11:59PM", sleep_color, [True,True,True,True,True,True,True]),
+            StaticTask("12:00AM", sleep_time[0], sleep_color, [True,True,True,True,True,True,True]),
         ]
 
     # Same-day sleep span (e.g. waking later than bedtime on the same 24h scale)
     return [
-        StaticTask(sleep_time[1], sleep_time[0], sleep_color, "1111111")
+        StaticTask(sleep_time[1], sleep_time[0], sleep_color, [True,True,True,True,True,True,True])
     ]
 
 
@@ -143,7 +143,7 @@ def calculate(tasks, dynamicTasks, staticTasks, sleepTime):
     # Place static tasks on active days and fail immediately on any overlap
     for s_idx, (start_m, end_m, color, days) in enumerate(parsed_statics):
         for day_idx in range(7):
-            if days[day_idx] == "1":
+            if days[day_idx]:
                 for existing in weekly_schedule[day_idx]:
                     if start_m < existing.endTime and end_m > existing.startTime:
                         return (
@@ -234,7 +234,7 @@ class task:
 if __name__ == "__main__":
     # Test Case 1: Valid schedule with overnight sleep, static class, and priority dynamic tasks
     tasks_out_1 = []
-    statics_1 = [StaticTask("9:00AM", "10:30AM", "#118AB2", "1010100")]
+    statics_1 = [StaticTask("9:00AM", "10:30AM", "#118AB2", [False,True,False,True,False,False,False])]
     dynamics_1 = [
         DynamicTask(60, 2, 1, "#FFD166"),
         DynamicTask(90, 1, 2, "#06D6A0"),
@@ -249,9 +249,10 @@ if __name__ == "__main__":
 
     # Test Case 2: Impossible dynamic duration returns failure string and leaves `tasks_out_2` untouched
     tasks_out_2 = []
-    statics_2 = [StaticTask("9:00AM", "10:00AM", "#118AB2", "1000000")]
+    statics_2 = [StaticTask("9:00AM", "10:00AM", "#118AB2", [True,False,False,False,False,False,False])]
     dynamics_2 = [DynamicTask(2000, 1, 1, "#EF476F")]  # Exceeds 1440-minute day
     result_2 = calculate(tasks_out_2, dynamics_2, statics_2, ["7:00AM", "11:00PM"])
     assert isinstance(result_2, str) and "Failed scheduling dynamic instance" in result_2
     assert tasks_out_2 == []
     print("Test 2 passed. Failure message:", result_2)
+
