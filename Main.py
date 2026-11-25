@@ -3,6 +3,8 @@ import tkinter as tk
 blue = "#1E90FF"
 red =  "#ed5949"
 yellow = "#ede449"
+lightGray = "#c1beba"
+gray = "#7a7979"
 
 
 # UI BEING DECLARED, MOST OF IT WILL BE CHANGED BY FUNCTIONS/COMMANDS
@@ -25,9 +27,9 @@ exit_button2.place(x=650, y=50,height=150, width=300)
 
 holderLabel_Label = tk.Label(scheduleMaker_Frame,borderwidth=2, relief="groove")
 holderLabel_Label.place(x=50, y=225, height=200, width=900)
-addDynamicTask_Button = (tk.Button(scheduleMaker_Frame, text="Add \ndynamic task", bg=red))
+addDynamicTask_Button = (tk.Button(scheduleMaker_Frame, text="Add \ndynamic task", bg=red, command= lambda : addNewDynamicTaskToList(dynamicTasks,staticTasks,scheduleMakerTasks_canvas)))
 addDynamicTask_Button.place(x=75, y=250, height=150,width=150)
-addStaticTask_Button = tk.Button(scheduleMaker_Frame, text="Add \nstatic task", bg=red)
+addStaticTask_Button = tk.Button(scheduleMaker_Frame, text="Add \nstatic task", bg=red, command= lambda : addNewStaticTaskToList(dynamicTasks,staticTasks,scheduleMakerTasks_canvas))
 addStaticTask_Button.place(x=225,y=250,height=150,width=150)
 sleepLabelTask_Label = tk.Label(scheduleMaker_Frame,relief="groove",text="Enter Sleep")
 sleepLabelTask_Label.place(x=400,y=250,height=50,width=500)
@@ -92,14 +94,11 @@ scheduleViewer_Frame.place(x=0,y=0,height=1150,width=1000)
 # button Commands
 def goToScheduleMaker():
     scheduleMaker_Frame.tkraise()
-
 def goToScheduleViewer():
     scheduleViewer_Frame.tkraise()
-
 def quitAndSave(dynamicTasks,staticTasks,sleepTime):
     saveFile(dynamicTasks,staticTasks,sleepTime)
     root.quit()
-
 def saveFile(dynamicTasks, staticTasks, sleepVar):
     file = open("schedule_data.txt", "w")
 
@@ -122,13 +121,32 @@ def saveFile(dynamicTasks, staticTasks, sleepVar):
     while index < static_size:
         task = staticTasks[index]
 
-        task_line = str(task[0]) + "," + str(task[1]) + "," + str(task[2]) + "," + str(task[3]) + "," + str(task[4]) + "\n"
+        task_line = str(task[0]) + "," + str(task[1]) + "," + daysOfWeekToString(task[2]) + "," + str(task[3]) + "," + str(task[4]) + "\n"
         file.write(task_line)
         index += 1
 
     file.close()
     return
+def stringToDaysOfWeek(str):
+    bools = [False, False, False, False, False, False, False]
+    if len(str) == 7:
+        index = 0
+        while index < 7:
+            if str[index] == "1":
+                bools[index] = True
+            index += 1
 
+    return bools
+def daysOfWeekToString(daysOfWeek):
+    if (len(daysOfWeek) != 7):
+        return "0000000"
+    str = ""
+    for value in daysOfWeek:
+        if value:
+            str += "1"
+        else:
+            str += "0"
+    return str
 def loadFile():
     file_path = "schedule_data.txt"
 
@@ -210,7 +228,7 @@ def loadFile():
                 is_valid = False
                 break
 
-            staticTasks.append([task_data[0], task_data[1], task_data[2], task_data[3], task_data[4]])
+            staticTasks.append([task_data[0], task_data[1], stringToDaysOfWeek(task_data[2]), task_data[3], task_data[4]])
             current_line += 1
 
 
@@ -221,34 +239,75 @@ def loadFile():
         return ([],[],["",""])
     else:
         return (dynamicTasks, staticTasks, sleepVar)
+def addNewDynamicTaskToList(dynamicTasks,staticTasks,scheduleMakerTasks_canvas):
+    dynamicTasks.append([30,100,0,red,"A Dynamic Task"])
+    refreshStaticAndDynamicTaskRendering(dynamicTasks, staticTasks, scheduleMakerTasks_canvas)
+def addNewStaticTaskToList(dynamicTasks,staticTasks,scheduleMakerTasks_canvas):
+    staticTasks.append(["10AM", "10AM", [False,False,False,False,False,False,False],blue,"A Static Task"])
+    refreshStaticAndDynamicTaskRendering(dynamicTasks, staticTasks, scheduleMakerTasks_canvas)
+def refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks,scheduleMakerTasks_canvas):
 
-def calculate(tasks,dynamicTasks,StaticTasks,sleepTime):
-    pass
-def addNewDynamicTaskToList(dynamicTasks):
-    dynamicTasks.append([30,100,0,red,"A Dynamic Task"]) # not correct
+    widthOfBox = 900
+    # unlike last time, we do not have to remake the canvas
 
-def addNewStaticTaskToList(staticTasks):
-    staticTasks.append(["10AM", "10AM", "0000000",blue,"A Static Task"]) # Not correct
-    # other functions
-def refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks):
-    pass
-    #reference to our ScheduleMakerCanvas -> Frame
-    # delete everything in Frame
-    #
+    # deleting the frame inside
+    scheduleMakerTasks_canvas.delete("all")
+    # CALC HEIGHT HERE BASED ON TASKS
+    # I want each Dynamic/Static task to be 300 pixels in height, and margins of 50 between each, and the ends
+    height = max(700, # if we are below, set the height to this
+                    (len(dynamicTasks) + len(staticTasks)) * 300 # height for each task
+                 +  (len(dynamicTasks) + len(staticTasks) - 1) * 50 # add a margin between each, does not matter when its 0, will go to 700 anyways
+                 +   100)
+
+    # making the frame and putting it inside
+    scheduleMakerTasks_frame = tk.Frame(scheduleMakerTasks_canvas, height=height,width=widthOfBox)  # will be inside of the canvas
+    scheduleMakerTasks_canvas.create_window((0, 0), window=scheduleMakerTasks_frame, anchor="nw")
+    # Making / configuring scroll bar
+    scheduleMakerTasks_canvas.configure(scrollregion=(0, 0, widthOfBox, height))
+    scheduleMakerTasks_scrollbar = tk.Scrollbar(scheduleMaker_Frame, orient="vertical",command=scheduleMakerTasks_canvas.yview)
+    scheduleMakerTasks_scrollbar.place(x=50, y=425, height=700)
+    scheduleMakerTasks_canvas.configure(yscrollcommand=scheduleMakerTasks_scrollbar.set)
+    # now we need to add each list and task, as a button
+    currentLocation = 50 # where we place the origin about the Y
+    for task in staticTasks:
+        TempFrame = (tk.Frame(scheduleMakerTasks_frame,background=gray))
+        tk.Label(TempFrame).place(x=0,y=0,height=50,width=300,text=staticTasks[4])
+
+
+
+
+
+
+        TempFrame.place(x=50, y=currentLocation, height=300, width=800)
+        currentLocation += 350
+    for task in dynamicTasks:
+        TempFrame = (tk.Frame(scheduleMakerTasks_frame, background=gray))
+
+        TempFrame.place(x=50, y=currentLocation, height=300, width=800)
+        currentLocation += 350
 def refreshTaskRendering(Tasks):
     pass
+def calculate_refreshTaskRendering_COMBINED(tasks, dynamicTasks, staticTasks, sleepTime):
+    calculate(tasks, dynamicTasks, staticTasks, sleepTime)
+    refreshTaskRendering(tasks)
 
 # BEGGINING OF ACTUALLY RUNNING THE PROGRAM
-
+# dynamic Tasks     time to do | priority | amount | color | name
+# static Tasks      start | end | Days of week | color | name
 dynamicTasks,staticTasks,sleepTime = loadFile()
 tasks = []
-calculate(tasks,dynamicTasks,staticTasks,sleepTime)
-refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks)
+from calculate_function import *
+calculate_refreshTaskRendering_COMBINED(tasks, dynamicTasks, staticTasks, sleepTime)
+refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks,scheduleMakerTasks_canvas)
+
 
 
 
 
 root.mainloop()
+
+
+
 
 
 
