@@ -1,0 +1,10 @@
+Input1,Input2
+3
+fuck,dick,shit,#d19846,EndPut
+20,1,3,#b30046,A Dynamic Task
+1,1,1,#00008a,yes
+4
+10AM,asdfghn,1111111,#b3ff8a,ssdasdasd
+4:00AM,Inwfeawd,0110000,#b3c08a,Farting
+7AM,Input2,0000000,#b3788a,lolly gagging
+10AM,10AM,0000000,#1E90FF,Dying
