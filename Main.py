@@ -396,7 +396,7 @@ def refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks,scheduleMakerT
         name = tk.StringVar(value=task[4])
         entries[1][4].append(name)
         tk.Entry(TempFrame, background=yellow,textvariable=name).place(x=150, y=0, height=50, width=300)# Make entry actually modify the value
-        name.trace_add("write", lambda *args, v=name, i=currentDynamicTask: dynamicTasks[i].__setitem__(0,v.get()))
+        name.trace_add("write", lambda *args, v=name, i=currentDynamicTask: dynamicTasks[i].__setitem__(4,v.get()))
 
         #color
         color = tk.StringVar(value=task[3])
