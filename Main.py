@@ -244,6 +244,12 @@ def addNewDynamicTaskToList(dynamicTasks,staticTasks,scheduleMakerTasks_canvas,e
 def addNewStaticTaskToList(dynamicTasks,staticTasks,scheduleMakerTasks_canvas,entries):
     staticTasks.append(["10AM", "10AM", [False,False,False,False,False,False,False],blue,"A Static Task"])
     refreshStaticAndDynamicTaskRendering(dynamicTasks, staticTasks, scheduleMakerTasks_canvas,entries)
+def deleteDynamicTask(index,dynamicTasks,staticTasks,scheduleMakerTasks_canvas,entries):
+    del dynamicTasks[index]
+    refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks,scheduleMakerTasks_canvas,entries)
+def deleteStaticTask(index, dynamicTasks, staticTasks, scheduleMakerTasks_canvas, entries):
+    del staticTasks[index]
+    refreshStaticAndDynamicTaskRendering(dynamicTasks, staticTasks, scheduleMakerTasks_canvas, entries)
 def refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks,scheduleMakerTasks_canvas,entries):
 
     widthOfBox = 900
@@ -371,7 +377,8 @@ def refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks,scheduleMakerT
         entries[0][2].append(checkBox7)
         checkBox7.trace_add("write",lambda *args, v=checkBox7, i=currentStaticTask: staticTasks[i][2].__setitem__(6, v.get()))
 
-
+        # deletion button
+        tk.Button(TempFrame, background=red, text="delete task",command=lambda index=currentStaticTask : deleteStaticTask(index,dynamicTasks,staticTasks,scheduleMakerTasks_canvas,entries)).place(x=550, y=50, height=50, width=250)
         # done
         TempFrame.place(x=50, y=currentLocation, height=300, width=800)
         currentLocation += 350
@@ -379,8 +386,8 @@ def refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks,scheduleMakerT
 
     currentDynamicTask = 0
     for task in dynamicTasks:
-        
-        # get frame color
+
+        # set frame color
         frameColor = task[3]
         try:
             root.winfo_rgb(task[3])
@@ -426,8 +433,10 @@ def refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks,scheduleMakerT
         tk.Entry(TempFrame, background=yellow,textvariable=priority).place(x=250, y=150, height=50, width=200)
         priority.trace_add("write", lambda *args, v=priority, i=currentDynamicTask: dynamicTasks[i].__setitem__(1, v.get()))
 
+        # deletion buttom
+        tk.Button(TempFrame, background=red, text="delete task",command=lambda index=currentDynamicTask: deleteDynamicTask(index, dynamicTasks, staticTasks,scheduleMakerTasks_canvas, entries)).place(x=550, y=50, height=50, width=250)
 
-
+        #done
         TempFrame.place(x=50, y=currentLocation, height=300, width=800)
         currentDynamicTask += 1
         currentLocation += 350
