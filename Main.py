@@ -450,11 +450,24 @@ def refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks,scheduleMakerT
         TempFrame.place(x=50, y=currentLocation, height=300, width=800)
         currentDynamicTask += 1
         currentLocation += 350
-def refreshTaskRendering(Tasks):
-    pass
-def calculate_refreshTaskRendering_COMBINED(tasks, dynamicTasks, staticTasks, sleepTime):
+def refreshTaskRendering(Tasks,scheduleViewerTasks_canvas):
+    # reseting canvas
+    scheduleViewerTasks_canvas.delete("all")
+    height = (60 * 24 * 2) + 100 # 2980
+    widthOfBox = 800
+    # making the frame and putting it inside
+    scheduleViewerTasks_frame = tk.Frame(scheduleViewerTasks_canvas, height=height,width=widthOfBox)  # will be inside of the canvas
+    scheduleViewerTasks_canvas.create_window((0, 0), window=scheduleViewerTasks_frame, anchor="nw")
+    # Making / configuring scroll bar
+    scheduleViewerTasks_canvas.configure(scrollregion=(0, 0, widthOfBox, height))
+    scheduleViewerTasks_scrollbar = tk.Scrollbar(scheduleViewer_Frame, orient="vertical", command=scheduleViewerTasks_canvas.yview)
+    scheduleViewerTasks_scrollbar.place(x=50, y=200, height=900)
+    scheduleViewerTasks_canvas.configure(yscrollcommand=scheduleViewerTasks_scrollbar.set)
+    
+    # Canvas.create_line(x1, y1, x2, y2) For later
+def calculate_refreshTaskRendering_COMBINED(tasks, dynamicTasks, staticTasks, sleepTime,scheduleViewerTasks_canvas):
     calculate(tasks, dynamicTasks, staticTasks, sleepTime)
-    refreshTaskRendering(tasks)
+    refreshTaskRendering(tasks,scheduleViewerTasks_canvas)
 
 
 # BEGINNING OF ACTUALLY RUNNING THE PROGRAM
@@ -484,13 +497,10 @@ sleepEntry = [None,None]
 # above is what should be in Entries, this is for UI exclusively, it just saves references
 entries = [[[],[],[],[],[]],[[],[],[],[],[]]]
 from calculate_function import *
-calculate_refreshTaskRendering_COMBINED(tasks, dynamicTasks, staticTasks, sleepTime)
+calculate_refreshTaskRendering_COMBINED(tasks, dynamicTasks, staticTasks, sleepTime,scheduleViewerTasks_canvas)
 refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks,scheduleMakerTasks_canvas,entries)
 
 root.mainloop()
-
-
-
 
 
 
