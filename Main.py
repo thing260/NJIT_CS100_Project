@@ -203,7 +203,7 @@ exit_Button = tk.Button(scheduleViewer_Frame,             text="Exit/Save",     
 exit_Button.place(x=650, y=50, height=150,width=300)
 
 WidthOfBox = 900
-height = (60 * 24 * 2) + 200
+height = (60 * 24 * 3) + 200
 # Making Base Viewer, this will be update by a function on launch
 # actually making canvas
 scheduleViewerTasks_canvas = tk.Canvas(scheduleViewer_Frame, bg="#b3008a")
@@ -460,17 +460,20 @@ def refreshTaskRendering(tasks,scheduleViewer_Frame):
             widget.destroy()
     Xaxis = 90
     # placing lines
+    for i in range(23):
+        tk.Label(scheduleViewerTasks_Frame, background="#605f60").place(x=85, y=280 + i * 180, height=2,width=805)
+
     for i in range(8):
-        tk.Label(scheduleViewerTasks_Frame, background="#000000").place(x=Xaxis - 5, y=0, height=((60 * 24 * 2) + 200),width=2)
+        tk.Label(scheduleViewerTasks_Frame, background="#000000").place(x=Xaxis - 5, y=0, height=((60 * 24 * 3) + 200),width=2)
         Xaxis += 115
     tk.Label(scheduleViewerTasks_Frame, background="#000000").place(x=0, y=100, height=2, width=900)
-    tk.Label(scheduleViewerTasks_Frame, background="#000000").place(x=0, y=((60 * 24 * 2) + 100), height=2, width=900)
+    tk.Label(scheduleViewerTasks_Frame, background="#000000").place(x=0, y=((60 * 24 * 3) + 100), height=2, width=900)
 
     # tasks
     Xaxis = 87
     for taskList in tasks:
         for task in taskList:
-            tk.Label(scheduleViewerTasks_Frame,text=task[3],background=task[2],wraplength=110).place(x=Xaxis,y=((task[0] * 2) + 100),width=113,height=((task[1] - task[0]) * 2))
+            tk.Label(scheduleViewerTasks_Frame,text=task[3],background=task[2],wraplength=110).place(x=Xaxis,y=((task[0] * 3) + 100),width=113,height=((task[1] - task[0]) * 3))
         Xaxis += 115
     # done
 
@@ -510,6 +513,7 @@ calculate_refreshTaskRendering_COMBINED(tasks, dynamicTasks, staticTasks, sleepT
 refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks,scheduleMakerTasks_canvas,entries)
 tasks = [[[120, 240, "#ed5949", "stuff asdfghjgdsafgdh"]], [[160, 240, "#ed5349", "stuff2"]], [], [[1380, 1440, "#1E1346", "stuff3"]], [], [], [[700, 800, "#ed1346", "stuff3"]]]
 root.mainloop()
+
 
 
 
