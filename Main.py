@@ -118,6 +118,8 @@ yellow = "#ede449"
 lightGray = "#c1beba"
 gray = "#7a7979"
 liminal = "#cad1bc"
+purple = "#7201eb"
+
 
 # load in shit:
 dynamicTasks,staticTasks,sleepTime = loadFile()
@@ -136,7 +138,7 @@ scheduleMaker_Frame = tk.Frame()
 
 goToSchedule_Button = tk.Button(scheduleMaker_Frame, text="Go to Schedule", bg=red,command=lambda: goToScheduleViewer())
 goToSchedule_Button.place(x=50, y=50, height=150, width=300)
-calculate_Button = tk.Button(scheduleMaker_Frame, text="Calculate",   bg=red,command=lambda : calculate_refreshTaskRendering_COMBINED(tasks,dynamicTasks,staticTasks,sleepTime,scheduleViewerTasks_canvas))
+calculate_Button = tk.Button(scheduleMaker_Frame, text="Calculate",   bg=red,command=lambda : calculate_refreshTaskRendering_COMBINED(root,tasks,dynamicTasks,staticTasks,sleepTime,scheduleViewerTasks_canvas))
 calculate_Button.place(x=350, y=50, height=150, width=300)
 exit_button2 = tk.Button(scheduleMaker_Frame, text="Exit/Save", bg=red,command= lambda : quitAndSave(dynamicTasks,staticTasks,sleepTime))
 exit_button2.place(x=650, y=50,height=150, width=300)
@@ -476,10 +478,13 @@ def refreshTaskRendering(tasks,scheduleViewer_Frame):
             tk.Label(scheduleViewerTasks_Frame,text=task[3],background=task[2],wraplength=110).place(x=Xaxis,y=((task[0] * 3) + 100),width=113,height=((task[1] - task[0]) * 3))
         Xaxis += 115
     # done
+def calculate_refreshTaskRendering_COMBINED(root,tasks, dynamicTasks, staticTasks, sleepTime,scheduleViewerTasks_canvas):
+    error = calculate(tasks, dynamicTasks, staticTasks, sleepTime)
+    if (error != None):
+        errorLabel = tk.Label(text=error,background=purple,wraplength=400)
+        errorLabel.place(x=300,y=25,width=400,height=100)
+        root.after(3000, errorLabel.destroy)
 
-
-def calculate_refreshTaskRendering_COMBINED(tasks, dynamicTasks, staticTasks, sleepTime,scheduleViewerTasks_canvas):
-    print(calculate(tasks, dynamicTasks, staticTasks, sleepTime))
     refreshTaskRendering(tasks,scheduleViewerTasks_canvas)
 
 # BEGINNING OF ACTUALLY RUNNING THE PROGRAM
@@ -509,11 +514,10 @@ sleepEntry = [None,None]
 # above is what should be in Entries, this is for UI exclusively, it just saves references
 entries = [[[],[],[],[],[]],[[],[],[],[],[]]]
 from calculate_function import *
-calculate_refreshTaskRendering_COMBINED(tasks, dynamicTasks, staticTasks, sleepTime,scheduleViewerTasks_canvas)
+calculate_refreshTaskRendering_COMBINED(root,tasks, dynamicTasks, staticTasks, sleepTime,scheduleViewerTasks_canvas)
 refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks,scheduleMakerTasks_canvas,entries)
 tasks = [[[120, 240, "#ed5949", "stuff asdfghjgdsafgdh"]], [[160, 240, "#ed5349", "stuff2"]], [], [[1380, 1440, "#1E1346", "stuff3"]], [], [], [[700, 800, "#ed1346", "stuff3"]]]
 root.mainloop()
-
 
 
 
