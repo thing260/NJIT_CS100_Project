@@ -457,6 +457,7 @@ def refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks,scheduleMakerT
         currentLocation += 350
 def refreshTaskRendering(tasks,scheduleViewer_Frame):
     # destory all labels
+    # I love mystery hardcoded values
     for widget in scheduleViewerTasks_Frame.winfo_children():
         if isinstance(widget, tk.Label):
             widget.destroy()
@@ -470,12 +471,24 @@ def refreshTaskRendering(tasks,scheduleViewer_Frame):
         Xaxis += 115
     tk.Label(scheduleViewerTasks_Frame, background="#000000").place(x=0, y=100, height=2, width=900)
     tk.Label(scheduleViewerTasks_Frame, background="#000000").place(x=0, y=((60 * 24 * 3) + 100), height=2, width=900)
+    
+    # times
+    for i in range(1,12):
+        tk.Label(scheduleViewerTasks_Frame,text=f"{i}:AM",font=("Arial", 9), background=liminal).place(x=20, y=(80 + (180 * i)), height=50, width=65)
+    tk.Label(scheduleViewerTasks_Frame, text=f"{12}:PM", font=("Arial", 9), background=liminal).place(x=20, y=(80 + (180 * 12)),height=50,width=65)
+    for i in range(1,12):
+        tk.Label(scheduleViewerTasks_Frame,text=f"{i}:PM",font=("Arial", 9), background=liminal).place(x=20, y=(80 + (180 * (12 + i))), height=50, width=65)
+    
+    # days of the week
+    DaysOfWeek = ["Mon","Tue","Wed","Thur","Fri","Sat","Sun"]
+    for day in range(7):
+        tk.Label(scheduleViewerTasks_Frame,text=DaysOfWeek[day], background=liminal).place(x=90 + (day * 115), y=0, height=100, width=110)
 
     # tasks
-    Xaxis = 87
+    Xaxis = 90
     for taskList in tasks:
         for task in taskList:
-            tk.Label(scheduleViewerTasks_Frame,text=task[3],background=task[2],wraplength=110).place(x=Xaxis,y=((task[0] * 3) + 100),width=113,height=((task[1] - task[0]) * 3))
+            tk.Label(scheduleViewerTasks_Frame,text=task[3],background=task[2],wraplength=107).place(x=Xaxis,y=((task[0] * 3) + 100),width=107,height=((task[1] - task[0]) * 3))
         Xaxis += 115
     # done
 def calculate_refreshTaskRendering_COMBINED(root,tasks, dynamicTasks, staticTasks, sleepTime,scheduleViewerTasks_canvas):
@@ -518,8 +531,6 @@ calculate_refreshTaskRendering_COMBINED(root,tasks, dynamicTasks, staticTasks, s
 refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks,scheduleMakerTasks_canvas,entries)
 tasks = [[[120, 240, "#ed5949", "stuff asdfghjgdsafgdh"]], [[160, 240, "#ed5349", "stuff2"]], [], [[1380, 1440, "#1E1346", "stuff3"]], [], [], [[700, 800, "#ed1346", "stuff3"]]]
 root.mainloop()
-
-
 
 
 
