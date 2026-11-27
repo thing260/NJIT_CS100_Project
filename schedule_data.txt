@@ -1,10 +1,10 @@
-7:00AM,8:00AM
+7AM,8:00AM
 4
 60,3,2,#d19846,hello
 120,1,1,#b30046,A Dynamic Task
 30,1000,0,#b300eb,A Dynamic Task (2)
 5,1,20,#ed5949,A Dynamic Task
 3
-4:00PM,5:00PM,0111000,#b3c08a,Farting
-6:00AM,7:00AM,0001100,#b3788a,lolly gagging
+4PM,5:00PM,0111000,#b3c08a,Farting
+6:00AM,7AM,0001100,#b3788a,lolly gagging
 10:00AM,11:00AM,1100001,#1E90FF,Dying
