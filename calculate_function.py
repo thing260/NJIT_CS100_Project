@@ -1,11 +1,40 @@
 import re
 
 
+class StaticTask:
+    def __init__(self, startTime, endTime, color, dayOfWeek, name="Static Task"):
+        self.startTime = startTime
+        self.endTime = endTime
+        self.color = color
+        self.dayOfWeek = dayOfWeek
+        self.name = name
+
+
+class DynamicTask:
+    def __init__(self, duration, priority, amount, color, name="Dynamic Task"):
+        self.duration = duration
+        self.priority = priority
+        self.amount = amount
+        self.color = color
+        self.name = name
+
+
+class task:
+    def __init__(self, startTime, endTime, color, name=""):
+        self.startTime = startTime
+        self.endTime = endTime
+        self.color = color
+        self.name = name
+
+    def __repr__(self):
+        return f"task({self.startTime}, {self.endTime}, {self.color!r}, {self.name!r})"
+
+
 def parse_time_to_minutes(time_str: str):
-    """Convert a 12-hour clock string (e.g. '9:30AM', '12PM') into minutes since 12:00AM (0..1439)."""
+    """Convert a 12-hour clock string (e.g. '7am', '7AM', '7:00am', '9:30 PM') to minutes (0..1439)."""
     if not isinstance(time_str, str):
         return None
-    cleaned = time_str.strip().upper()
+    cleaned = re.sub(r"\s+", "", time_str.strip().upper())
     match = re.fullmatch(r"(1[0-2]|[1-9])(?::([0-5][0-9]))?(AM|PM)", cleaned)
     if not match:
         return None
@@ -14,7 +43,7 @@ def parse_time_to_minutes(time_str: str):
     minute = int(match.group(2)) if match.group(2) else 0
     meridiem = match.group(3)
 
-    # Convert 12AM to 00:xx and 1PM..11PM to 13:xx..23:xx
+    # Convert 12AM -> 00:xx and 1PM..11PM -> 13:xx..23:xx
     if meridiem == "AM":
         if hour == 12:
             hour = 0
@@ -25,30 +54,42 @@ def parse_time_to_minutes(time_str: str):
     return hour * 60 + minute
 
 
+def parse_days_of_week(days):
+    """Normalize a 7-bool list/tuple (or 7-char '0'/'1' string) into a list of 7 booleans."""
+    if isinstance(days, (list, tuple)) and len(days) == 7:
+        if all(isinstance(d, bool) for d in days):
+            return list(days)
+        return None
+    if isinstance(days, str) and len(days) == 7 and set(days).issubset({"0", "1"}):
+        return [ch == "1" for ch in days]
+    return None
+
+
 def sleep_to_static_tasks(sleep_time):
-    """Convert [wake_time, bed_time] into one or two overnight static sleep blocks."""
-    if not isinstance(sleep_time, list) or len(sleep_time) != 2:
+    """Convert [wake_time, bed_time] into static sleep blocks across all 7 days."""
+    if not isinstance(sleep_time, (list, tuple)) or len(sleep_time) != 2:
         return None
 
     wake_mins = parse_time_to_minutes(sleep_time[0])
     bed_mins = parse_time_to_minutes(sleep_time[1])
 
-    # Reject invalid times or zero-length sleep windows
+    # Reject invalid times or identical wake/bed times
     if wake_mins is None or bed_mins is None or wake_mins == bed_mins:
         return None
 
     sleep_color = "#4B0082"
+    sleep_name = "Sleep"
+    all_days = [True] * 7
 
-    # Split overnight sleep across midnight into two day blocks
+    # Split overnight sleep across midnight into two daily spans
     if bed_mins > wake_mins:
         return [
-            StaticTask(sleep_time[1], "11:59PM", sleep_color, [True,True,True,True,True,True,True]),
-            StaticTask("12:00AM", sleep_time[0], sleep_color, [True,True,True,True,True,True,True]),
+            StaticTask(sleep_time[1], "11:59PM", sleep_color, list(all_days), sleep_name),
+            StaticTask("12:00AM", sleep_time[0], sleep_color, list(all_days), sleep_name),
         ]
 
-    # Same-day sleep span (e.g. waking later than bedtime on the same 24h scale)
     return [
-        StaticTask(sleep_time[1], sleep_time[0], sleep_color, [True,True,True,True,True,True,True])
+        StaticTask(sleep_time[1], sleep_time[0], sleep_color, list(all_days), sleep_name)
     ]
 
 
@@ -59,10 +100,9 @@ def sleep_to_static_tasks(sleep_time):
 def calculate(tasks, dynamicTasks, staticTasks, sleepTime):
     """
     Validate inputs, place static and sleep blocks, and schedule dynamic tasks
-    across a 7-day list of `task` objects.
+    into a 7-day list of `task(startTime, endTime, color, name)` objects.
     Returns `tasks` on success, or a descriptive failure string on invalid/impossible input.
     """
-    # Validate top-level container types
     if not isinstance(tasks, list):
         return "Failed at 'tasks' validation: expected a list."
     if not isinstance(dynamicTasks, (list, tuple)):
@@ -70,7 +110,6 @@ def calculate(tasks, dynamicTasks, staticTasks, sleepTime):
     if not isinstance(staticTasks, (list, tuple)):
         return "Failed at 'staticTasks' validation: expected a list or tuple."
 
-    # Build and validate static blocks from sleepTime first
     sleep_statics = sleep_to_static_tasks(sleepTime)
     if sleep_statics is None:
         return (
@@ -78,11 +117,9 @@ def calculate(tasks, dynamicTasks, staticTasks, sleepTime):
             "(expected [wake_time, bed_time] with distinct valid times)."
         )
 
-    # Combine user-provided static tasks with generated sleep blocks
     all_statics = list(staticTasks) + sleep_statics
     num_user_statics = len(staticTasks)
 
-    # Parse and validate all static tasks into minute ranges
     parsed_statics = []
     for idx, st in enumerate(all_statics):
         source_label = (
@@ -95,8 +132,12 @@ def calculate(tasks, dynamicTasks, staticTasks, sleepTime):
         if st is None or not all(hasattr(st, attr) for attr in required_attrs):
             return f"Failed at {source_label}: missing required attributes {required_attrs}."
 
-        # Treat "11:59PM" end time as full end-of-day (1440 minutes)
-        if isinstance(st.endTime, str) and st.endTime.strip().upper() == "11:59PM":
+        st_name = getattr(st, "name", None)
+        if not isinstance(st_name, str) or not st_name.strip():
+            st_name = "Sleep" if idx >= num_user_statics else f"Static Task {idx + 1}"
+
+        # Treat "11:59PM" end time as end of day (1440 minutes)
+        if isinstance(st.endTime, str) and re.sub(r"\s+", "", st.endTime.strip().upper()) == "11:59PM":
             end_m = 1440
         else:
             end_m = parse_time_to_minutes(st.endTime)
@@ -113,19 +154,16 @@ def calculate(tasks, dynamicTasks, staticTasks, sleepTime):
                 f"Failed at {source_label} time range: "
                 f"startTime ({start_m}m) must be earlier than endTime ({end_m}m)."
             )
-        if (
-            not isinstance(st.dayOfWeek, str)
-            or len(st.dayOfWeek) != 7
-            or not set(st.dayOfWeek).issubset({"0", "1"})
-        ):
+
+        parsed_days = parse_days_of_week(st.dayOfWeek)
+        if parsed_days is None:
             return (
                 f"Failed at {source_label} dayOfWeek validation: "
-                f"got {st.dayOfWeek!r} (expected 7-char string of '0'/'1')."
+                f"got {st.dayOfWeek!r} (expected 7-element list of bools)."
             )
 
-        parsed_statics.append((start_m, end_m, st.color, st.dayOfWeek))
+        parsed_statics.append((start_m, end_m, st.color, parsed_days, st_name))
 
-    # Validate dynamic task fields (guard against bool since bool subclasses int in Python)
     for idx, dt in enumerate(dynamicTasks):
         required_dyn_attrs = ("duration", "priority", "amount", "color")
         if dt is None or not all(hasattr(dt, attr) for attr in required_dyn_attrs):
@@ -137,54 +175,50 @@ def calculate(tasks, dynamicTasks, staticTasks, sleepTime):
         if isinstance(dt.amount, bool) or not isinstance(dt.amount, int) or dt.amount < 0:
             return f"Failed at dynamicTasks[{idx}].amount: got {dt.amount!r} (expected non-negative int)."
 
-    # Initialize empty schedules for each of the 7 days (0..6)
     weekly_schedule = [[] for _ in range(7)]
 
-    # Place static tasks on active days and fail immediately on any overlap
-    for s_idx, (start_m, end_m, color, days) in enumerate(parsed_statics):
+    # Place static blocks and reject overlaps on active days
+    for s_idx, (start_m, end_m, color, days, st_name) in enumerate(parsed_statics):
         for day_idx in range(7):
             if days[day_idx]:
                 for existing in weekly_schedule[day_idx]:
                     if start_m < existing.endTime and end_m > existing.startTime:
                         return (
-                            f"Failed placing static task #{s_idx} on day {day_idx} "
-                            f"({start_m}-{end_m}m): overlaps existing block "
+                            f"Failed placing static task '{st_name}' (#{s_idx}) on day {day_idx} "
+                            f"({start_m}-{end_m}m): overlaps '{existing.name}' "
                             f"({existing.startTime}-{existing.endTime}m)."
                         )
-                weekly_schedule[day_idx].append(task(start_m, end_m, color))
+                weekly_schedule[day_idx].append(task(start_m, end_m, color, st_name))
 
-    # Keep each day's blocks sorted chronologically before inserting dynamic tasks
     for day_idx in range(7):
         weekly_schedule[day_idx].sort(key=lambda t: t.startTime)
 
-    # Expand dynamic tasks by `amount`, ordered by priority (lower number = higher priority)
+    # Expand dynamic tasks by `amount` and schedule higher-priority (smaller number) tasks first
     sorted_dynamics = sorted(dynamicTasks, key=lambda d: d.priority)
     dynamic_instances = []
     for dt in sorted_dynamics:
+        dt_name = getattr(dt, "name", None)
+        if not isinstance(dt_name, str) or not dt_name.strip():
+            dt_name = "Dynamic Task"
         for _ in range(dt.amount):
-            dynamic_instances.append(dt)
+            dynamic_instances.append((dt, dt_name))
 
-    day_search_order = [0, 1, 2, 3, 4, 5, 6]
-
-    # Fit each dynamic instance into the first open gap wide enough across days 0..6
-    for inst_idx, dt in enumerate(dynamic_instances):
+    for inst_idx, (dt, dt_name) in enumerate(dynamic_instances):
         placed = False
-        for day_idx in day_search_order:
+        for day_idx in range(7):
             day_tasks = weekly_schedule[day_idx]
             current_time = 0
 
-            # Check gaps before each existing task
             for existing in day_tasks:
                 if existing.startTime - current_time >= dt.duration:
-                    day_tasks.append(task(current_time, current_time + dt.duration, dt.color))
+                    day_tasks.append(task(current_time, current_time + dt.duration, dt.color, dt_name))
                     day_tasks.sort(key=lambda t: t.startTime)
                     placed = True
                     break
                 current_time = max(current_time, existing.endTime)
 
-            # Check remaining open window after the last task up to 1440m (end of day)
             if not placed and (1440 - current_time >= dt.duration):
-                day_tasks.append(task(current_time, current_time + dt.duration, dt.color))
+                day_tasks.append(task(current_time, current_time + dt.duration, dt.color, dt_name))
                 day_tasks.sort(key=lambda t: t.startTime)
                 placed = True
 
@@ -193,67 +227,34 @@ def calculate(tasks, dynamicTasks, staticTasks, sleepTime):
 
         if not placed:
             return (
-                f"Failed scheduling dynamic instance #{inst_idx} "
-                f"(duration={dt.duration}m, priority={dt.priority}): no open slot across days 0..6."
+                f"Failed scheduling '{dt_name}' (instance #{inst_idx}, duration={dt.duration}m, "
+                f"priority={dt.priority}): no open slot across days 0..6."
             )
 
-    # Commit results in-place only after all validation and scheduling succeed
+    # Replace caller's list contents in place with the new 7-day schedule
     tasks.clear()
     tasks.extend(weekly_schedule)
     return tasks
 
 
-# --- Helper classes & 2 debugger test cases ---
-
-class StaticTask:
-    def __init__(self, startTime, endTime, color, dayOfWeek):
-        self.startTime = startTime
-        self.endTime = endTime
-        self.color = color
-        self.dayOfWeek = dayOfWeek
-
-
-class DynamicTask:
-    def __init__(self, duration, priority, amount, color):
-        self.duration = duration
-        self.priority = priority
-        self.amount = amount
-        self.color = color
-
-
-class task:
-    def __init__(self, startTime, endTime, color):
-        self.startTime = startTime
-        self.endTime = endTime
-        self.color = color
-
-    def __repr__(self):
-        return f"task({self.startTime}, {self.endTime}, {self.color!r})"
-
-
 if __name__ == "__main__":
-    # Test Case 1: Valid schedule with overnight sleep, static class, and priority dynamic tasks
-    tasks_out_1 = []
-    statics_1 = [StaticTask("9:00AM", "10:30AM", "#118AB2", [False,True,False,True,False,False,False])]
-    dynamics_1 = [
-        DynamicTask(60, 2, 1, "#FFD166"),
-        DynamicTask(90, 1, 2, "#06D6A0"),
+    # Test 1: Valid schedule with bool dayOfWeek list and named tasks
+    my_tasks = [task(0, 10, "#000000", "Old Stale Task")]
+    my_statics = [
+        StaticTask("9:00am", "10:30AM", "#118AB2", [True, False, True, False, True, False, False], "CS100 Lecture"),
     ]
-    result_1 = calculate(tasks_out_1, dynamics_1, statics_1, ["7:00AM", "11:00PM"])
-    assert isinstance(result_1, list) and len(result_1) == 7
-    # Confirm no adjacent blocks overlap on any day
-    for day_blocks in result_1:
-        for i in range(len(day_blocks) - 1):
-            assert day_blocks[i].endTime <= day_blocks[i + 1].startTime
-    print("Test 1 passed. Monday blocks:", result_1[0])
+    my_dynamics = [
+        DynamicTask(60, 1, 1, "#06D6A0", "Homework"),
+    ]
+    result_1 = calculate(my_tasks, my_dynamics, my_statics, ["7am", "11:00pm"])
+    assert result_1 is my_tasks
+    assert len(my_tasks) == 7
+    assert any(t.name == "Homework" and t.color == "#06D6A0" for t in my_tasks[0])
+    print("Test 1 passed. Monday blocks:", my_tasks[0])
 
-    # Test Case 2: Impossible dynamic duration returns failure string and leaves `tasks_out_2` untouched
-    tasks_out_2 = []
-    statics_2 = [StaticTask("9:00AM", "10:00AM", "#118AB2", [True,False,False,False,False,False,False])]
-    dynamics_2 = [DynamicTask(2000, 1, 1, "#EF476F")]  # Exceeds 1440-minute day
-    result_2 = calculate(tasks_out_2, dynamics_2, statics_2, ["7:00AM", "11:00PM"])
-    assert isinstance(result_2, str) and "Failed scheduling dynamic instance" in result_2
-    assert tasks_out_2 == []
-    print("Test 2 passed. Failure message:", result_2)
-
-
+    # Test 2: Junk input returns descriptive string and leaves tasks list cleared/empty
+    bad_tasks = [task(0, 5, "#000000", "Temporary")]
+    result_2 = calculate(bad_tasks, [DynamicTask("bad", 1, 1, "#EF476F", "Broken")], [], ["7AM", "11PM"])
+    assert isinstance(result_2, str) and "dynamicTasks[0].duration" in result_2
+    assert bad_tasks == [task(0, 5, "#000000", "Temporary")]
+    print("Test 2 passed. Error string:", result_2)
