@@ -117,6 +117,7 @@ red =  "#ed5949"
 yellow = "#ede449"
 lightGray = "#c1beba"
 gray = "#7a7979"
+liminal = "#cad1bc"
 
 # load in shit:
 dynamicTasks,staticTasks,sleepTime = loadFile()
@@ -135,7 +136,7 @@ scheduleMaker_Frame = tk.Frame()
 
 goToSchedule_Button = tk.Button(scheduleMaker_Frame, text="Go to Schedule", bg=red,command=lambda: goToScheduleViewer())
 goToSchedule_Button.place(x=50, y=50, height=150, width=300)
-calculate_Button = tk.Button(scheduleMaker_Frame, text="Calculate",   bg=red,command=lambda : calculate(tasks,dynamicTasks,staticTasks,sleepTime))
+calculate_Button = tk.Button(scheduleMaker_Frame, text="Calculate",   bg=red,command=lambda : calculate_refreshTaskRendering_COMBINED(tasks,dynamicTasks,staticTasks,sleepTime,scheduleViewerTasks_canvas))
 calculate_Button.place(x=350, y=50, height=150, width=300)
 exit_button2 = tk.Button(scheduleMaker_Frame, text="Exit/Save", bg=red,command= lambda : quitAndSave(dynamicTasks,staticTasks,sleepTime))
 exit_button2.place(x=650, y=50,height=150, width=300)
@@ -202,22 +203,24 @@ exit_Button = tk.Button(scheduleViewer_Frame,             text="Exit/Save",     
 exit_Button.place(x=650, y=50, height=150,width=300)
 
 WidthOfBox = 900
+height = (60 * 24 * 2) + 200
 # Making Base Viewer, this will be update by a function on launch
 # actually making canvas
-scheduleViewerTasks_canvas = tk.Canvas(scheduleViewer_Frame, bg=blue)
-scheduleViewerTasks_canvas.place(x=50, y=425, height=900, width=WidthOfBox)
+scheduleViewerTasks_canvas = tk.Canvas(scheduleViewer_Frame, bg="#b3008a")
+scheduleViewerTasks_canvas.place(x=50, y=200, height=900, width=WidthOfBox)
 # making the frame and putting it inside
-scheduleViewerTasks_Frame = tk.Frame(scheduleViewerTasks_canvas, height=1200,width=WidthOfBox)  # will be inside of the canvas
+scheduleViewerTasks_Frame = tk.Frame(scheduleViewerTasks_canvas, height=height,width=WidthOfBox,bg=liminal)  # will be inside of the canvas
 scheduleViewerTasks_canvas.create_window((0, 0), window=scheduleViewerTasks_Frame, anchor="nw")
 # Making / configuring scroll bar
-scheduleViewerTasks_canvas.configure(scrollregion=(0, 0, WidthOfBox, 1200))
+scheduleViewerTasks_canvas.configure(scrollregion=(0, 0, WidthOfBox, height))
 scheduleViewerTasks_scrollbar = tk.Scrollbar(scheduleViewer_Frame, orient="vertical",command=scheduleViewerTasks_canvas.yview)
 scheduleViewerTasks_scrollbar.place(x=50, y=200, height=900)
 scheduleViewerTasks_canvas.configure(yscrollcommand=scheduleViewerTasks_scrollbar.set)
 
-scheduleViewer_Frame.place(x=0,y=0,height=1150,width=1000)
+scheduleViewer_Frame.place(x=0,y=0,height=height,width=1000)
 
 
+# Canvas.create_line(x1, y1, x2, y2) For later
 
 # DONE DECLARING UI
 
@@ -450,25 +453,31 @@ def refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks,scheduleMakerT
         TempFrame.place(x=50, y=currentLocation, height=300, width=800)
         currentDynamicTask += 1
         currentLocation += 350
-def refreshTaskRendering(Tasks,scheduleViewerTasks_canvas):
-    # reseting canvas
-    scheduleViewerTasks_canvas.delete("all")
-    height = (60 * 24 * 2) + 100 # 2980
-    widthOfBox = 800
-    # making the frame and putting it inside
-    scheduleViewerTasks_frame = tk.Frame(scheduleViewerTasks_canvas, height=height,width=widthOfBox)  # will be inside of the canvas
-    scheduleViewerTasks_canvas.create_window((0, 0), window=scheduleViewerTasks_frame, anchor="nw")
-    # Making / configuring scroll bar
-    scheduleViewerTasks_canvas.configure(scrollregion=(0, 0, widthOfBox, height))
-    scheduleViewerTasks_scrollbar = tk.Scrollbar(scheduleViewer_Frame, orient="vertical", command=scheduleViewerTasks_canvas.yview)
-    scheduleViewerTasks_scrollbar.place(x=50, y=200, height=900)
-    scheduleViewerTasks_canvas.configure(yscrollcommand=scheduleViewerTasks_scrollbar.set)
-    
-    # Canvas.create_line(x1, y1, x2, y2) For later
-def calculate_refreshTaskRendering_COMBINED(tasks, dynamicTasks, staticTasks, sleepTime,scheduleViewerTasks_canvas):
-    calculate(tasks, dynamicTasks, staticTasks, sleepTime)
-    refreshTaskRendering(tasks,scheduleViewerTasks_canvas)
+def refreshTaskRendering(tasks,scheduleViewer_Frame):
+    # destory all labels
+    for widget in scheduleViewerTasks_Frame.winfo_children():
+        if isinstance(widget, tk.Label):
+            widget.destroy()
+    Xaxis = 90
+    # placing lines
+    for i in range(8):
+        tk.Label(scheduleViewerTasks_Frame, background="#000000").place(x=Xaxis - 5, y=0, height=((60 * 24 * 2) + 200),width=2)
+        Xaxis += 115
+    tk.Label(scheduleViewerTasks_Frame, background="#000000").place(x=0, y=100, height=2, width=900)
+    tk.Label(scheduleViewerTasks_Frame, background="#000000").place(x=0, y=((60 * 24 * 2) + 100), height=2, width=900)
 
+    # tasks
+    Xaxis = 87
+    for taskList in tasks:
+        for task in taskList:
+            tk.Label(scheduleViewerTasks_Frame,text=task[3],background=task[2],wraplength=110).place(x=Xaxis,y=((task[0] * 2) + 100),width=113,height=((task[1] - task[0]) * 2))
+        Xaxis += 115
+    # done
+
+
+def calculate_refreshTaskRendering_COMBINED(tasks, dynamicTasks, staticTasks, sleepTime,scheduleViewerTasks_canvas):
+    print(calculate(tasks, dynamicTasks, staticTasks, sleepTime))
+    refreshTaskRendering(tasks,scheduleViewerTasks_canvas)
 
 # BEGINNING OF ACTUALLY RUNNING THE PROGRAM
 # dynamic Tasks     time to do | priority | amount | color | name
@@ -499,8 +508,10 @@ entries = [[[],[],[],[],[]],[[],[],[],[],[]]]
 from calculate_function import *
 calculate_refreshTaskRendering_COMBINED(tasks, dynamicTasks, staticTasks, sleepTime,scheduleViewerTasks_canvas)
 refreshStaticAndDynamicTaskRendering(dynamicTasks,staticTasks,scheduleMakerTasks_canvas,entries)
-
+tasks = [[[120, 240, "#ed5949", "stuff asdfghjgdsafgdh"]], [[160, 240, "#ed5349", "stuff2"]], [], [[1380, 1440, "#1E1346", "stuff3"]], [], [], [[700, 800, "#ed1346", "stuff3"]]]
 root.mainloop()
+
+
 
 
 
